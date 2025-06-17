@@ -41,6 +41,14 @@
             padding: 0.1rem; color: #1f2937;
         }
         .tracking-input:focus { outline: 2px solid #3b82f6; outline-offset: 1px; }
+        .hosting-warning {
+            animation: pulse-bg 3s infinite;
+        }
+        @keyframes pulse-bg {
+            0% { background-color: #991b1b; } /* red-800 */
+            50% { background-color: #b91c1c; } /* red-700 */
+            100% { background-color: #991b1b; } /* red-800 */
+        }
     </style>
 </head>
 
@@ -77,11 +85,11 @@
 
         // --- COSTANTI GLOBALI ---
         const EXERCISE_CATEGORIES = ["Nessuna Categoria", "ADDOMINALI", "ADDUCTORS", "BICEPS", "CAVES", "CHEST ISO", "DECLINE PUSH", "FEMORALI", "GLUTEI", "HAMSTRINGS", "HIP HINGE", "HORIZONTAL PULL", "HORIZONTAL PUSH", "HIP EXTENSION", "INCLINE PUSH", "LED PRESS VARIATION", "LOWER BACK", "LUNGE", "PULLOVER", "QUADRICEPS", "SIDE DELTS", "SQUAT PATTERN", "TRAPS", "TRICEPS PUSH", "UPPER BACK", "VERTICAL PULL", "VERTICAL PUSH"];
-        const INITIAL_FORM_STATE = { name: '', category: 'Nessuna Categoria', sets: '3', reps: '10', rest: '60"', notes: '', imageUrl: '', videoUrl: '' };
+        const INITIAL_FORM_STATE = { name: '', category: 'Nessuna Categoria', sets: '3', repRangeMin: '8', repRangeMax: '12', rest: '60"', notes: '', imageUrl: '', videoUrl: '' };
         const createInitialSheets = () => ({A: { name: 'SCHEDA A', exercises: [], weeks: 4 },B: { name: 'SCHEDA B', exercises: [], weeks: 4 },C: { name: 'SCHEDA C', exercises: [], weeks: 4 },D: { name: 'SCHEDA D', exercises: [], weeks: 4 }});
         const INITIAL_APP_STATE = {clientName: 'Nome Cliente',logoUrl: null,sheets: createInitialSheets(),imageLibrary: {}};
         
-        // --- COMPONENTI UI ATOMICI ---
+        // --- COMPONENTI UI ---
         const LoadingSpinner = ({ message }) => (<div className="min-h-screen bg-gray-900 flex flex-col justify-center items-center text-white"><svg className="animate-spin -ml-1 mr-3 h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p className="mt-4 text-xl font-teko tracking-wider">{message}</p></div>);
         const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }) => { if (!isOpen) return null; return (<div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4"><div className="bg-gray-800 rounded-lg p-6 w-full max-w-sm"><h3 className="text-xl font-bold text-white mb-4">{title}</h3><p className="text-gray-300 mb-6">{children}</p><div className="flex justify-end space-x-4"><button onClick={onClose} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white font-semibold rounded-lg">Annulla</button><button onClick={onConfirm} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg">Conferma</button></div></div></div>); };
         
@@ -102,37 +110,28 @@
             const handleInputChange = (weekIndex, field, value) => { onTrackingChange(exercise.id, weekIndex, field, value); };
             return (
                 <div className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700/50 shadow-lg">
-                    {/* Sezione Informazioni Principali */}
                     <div className="p-4 flex flex-col sm:flex-row gap-4">
-                        {exercise.imageUrl && (
-                            <img src={exercise.imageUrl} className="w-full sm:w-24 h-48 sm:h-24 object-cover rounded flex-shrink-0" crossOrigin="anonymous" onError={(e) => { e.target.style.display = 'none'; }} />
-                        )}
+                        {exercise.imageUrl && <img src={exercise.imageUrl} className="w-full sm:w-24 h-48 sm:h-24 object-cover rounded flex-shrink-0" crossOrigin="anonymous" onError={(e) => { e.target.style.display = 'none'; }} />}
                         <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                                <h3 className="font-teko text-2xl font-semibold text-white uppercase tracking-wide">{exercise.name}</h3>
-                                {exercise.videoUrl && <a href={exercise.videoUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-blue-600/50 hover:bg-blue-500/50 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg></a>}
-                            </div>
+                            <div className="flex items-center justify-between"><h3 className="font-teko text-2xl font-semibold text-white uppercase tracking-wide">{exercise.name}</h3>{exercise.videoUrl && <a href={exercise.videoUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-blue-600/50 hover:bg-blue-500/50 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg></a>}</div>
                             <p className="text-sm text-blue-400 -mt-1">{exercise.category}</p>
-                            
                             <div className="flex items-center gap-6 mt-3 text-white text-center">
                                 <div><div className="text-xs text-gray-400">SERIE</div><div className="font-bold text-lg">{exercise.sets}</div></div>
-                                <div><div className="text-xs text-gray-400">REPS</div><div className="font-bold text-lg">{exercise.reps}</div></div>
+                                <div><div className="text-xs text-gray-400">REPS</div><div className="font-bold text-lg">{`${exercise.repRangeMin}-${exercise.repRangeMax}`}</div></div>
                                 <div><div className="text-xs text-gray-400">REC.</div><div className="font-bold text-lg">{exercise.rest}</div></div>
                             </div>
-
                             {exercise.notes && <p className="text-xs text-gray-400 italic mt-3 pt-3 border-t border-gray-700">{exercise.notes}</p>}
                         </div>
                     </div>
-                    {/* Sezione Tracking */}
                     <div className="bg-gray-900/50 px-2 pb-2">
                         <table className="w-full text-center text-xs">
                              <thead className="text-gray-400"><tr><th className="font-normal p-1 w-1/3">CARICO</th><th className="font-normal p-1 w-1/3">REPS</th><th className="font-normal p-1 w-1/3">NOTE</th></tr></thead>
                              <tbody>
                                  {(exercise.tracking || []).map((weekData, weekIndex) => (
                                      <tr key={weekIndex}>
-                                         <td className="p-1 h-12 align-top"><input type="text" className="tracking-input h-full" value={weekData.load || ''} onChange={(e) => handleInputChange(weekIndex, 'load', e.target.value)} /><div className="text-gray-500 text-[10px] leading-tight mt-0.5">{weekIndex > 0 && exercise.tracking[weekIndex-1].load ? `Prec: ${exercise.tracking[weekIndex-1].load}`: '\u00A0'}</div></td>
-                                         <td className="p-1 h-12 align-top"><input type="text" className="tracking-input h-full" value={weekData.reps || ''} onChange={(e) => handleInputChange(weekIndex, 'reps', e.target.value)} /><div className="text-gray-500 text-[10px] leading-tight mt-0.5">{weekIndex > 0 && exercise.tracking[weekIndex-1].reps ? `Prec: ${exercise.tracking[weekIndex-1].reps}`: '\u00A0'}</div></td>
-                                         <td className="p-1 h-12 align-top"><input type="text" className="tracking-input h-full" value={weekData.notes || ''} onChange={(e) => handleInputChange(weekIndex, 'notes', e.target.value)} /></td>
+                                         <td className="p-1 h-12 align-top"><input type="text" placeholder="kg" className="tracking-input h-full" value={weekData.load || ''} onChange={(e) => handleInputChange(weekIndex, 'load', e.target.value)} /><div className="text-blue-400/80 text-[10px] leading-tight mt-0.5 font-semibold">{weekIndex > 0 && exercise.tracking[weekIndex-1].load ? `Prec: ${exercise.tracking[weekIndex-1].load}kg`: '\u00A0'}</div></td>
+                                         <td className="p-1 h-12 align-top"><input type="text" placeholder="n°" className="tracking-input h-full" value={weekData.reps || ''} onChange={(e) => handleInputChange(weekIndex, 'reps', e.target.value)} /><div className="text-blue-400/80 text-[10px] leading-tight mt-0.5 font-semibold">{weekIndex > 0 && exercise.tracking[weekIndex-1].reps ? `Prec: ${exercise.tracking[weekIndex-1].reps} reps`: '\u00A0'}</div></td>
+                                         <td className="p-1 h-12 align-top"><input type="text" placeholder="note..." className="tracking-input h-full" value={weekData.notes || ''} onChange={(e) => handleInputChange(weekIndex, 'notes', e.target.value)} /></td>
                                      </tr>
                                  ))}
                              </tbody>
@@ -142,99 +141,114 @@
             );
         };
         
-        const WorkoutSheet = ({ clientName, sheetData, logoUrl, sheetId, onTrackingChange }) => {
-            return (
-                <div id={`printable-area-${sheetId}`} className="printable-area bg-gray-900 text-white shadow-2xl rounded-lg overflow-hidden font-sans mb-8">
-                    <header className="relative text-center p-4 md:p-6 bg-cover bg-center" style={{ backgroundImage: `url('https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg')` }}><div className="absolute inset-0 bg-black/75"></div><div className="relative flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right">{logoUrl && <img src={logoUrl} alt="Logo Caricato" className="h-20 sm:h-24 md:h-28 w-auto" crossOrigin="anonymous" />}<div><h1 className="font-teko text-4xl sm:text-5xl md:text-6xl font-bold tracking-widest uppercase">REBORN TEAM</h1><h2 className="font-teko text-2xl sm:text-3xl md:text-4xl text-gray-300 tracking-wider">PERSONAL TRAINER</h2></div></div></header>
-                    <div className="bg-black p-2 flex flex-col sm:flex-row justify-between items-center text-sm gap-2 px-4"><div><span className="font-bold">CLIENTE:</span> <span className="font-normal">{clientName || 'Nome Cliente'}</span></div><div><span className="font-bold">PIANO:</span> <span className="font-normal">{sheetData.name || 'N/A'}</span></div></div>
-                    <main className="p-2 sm:p-4 space-y-4">{sheetData.exercises.map((exercise, index) => (<SingleExerciseBlock key={exercise.id} exercise={exercise} onTrackingChange={(exId, weekIndex, field, value) => onTrackingChange(sheetId, exId, weekIndex, field, value)} />))}</main>
-                </div>
-            );
-        };
+        const WorkoutSheet = ({ clientName, sheetData, logoUrl, sheetId, onTrackingChange }) => (
+            <div id={`printable-area-${sheetId}`} className="printable-area bg-gray-900 text-white shadow-2xl rounded-lg overflow-hidden font-sans mb-8">
+                <header className="relative text-center p-4 md:p-6 bg-cover bg-center" style={{ backgroundImage: `url('https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg')` }}><div className="absolute inset-0 bg-black/75"></div><div className="relative flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right">{logoUrl && <img src={logoUrl} alt="Logo Caricato" className="h-20 sm:h-24 md:h-28 w-auto" crossOrigin="anonymous" />}<div><h1 className="font-teko text-4xl sm:text-5xl md:text-6xl font-bold tracking-widest uppercase">REBORN TEAM</h1><h2 className="font-teko text-2xl sm:text-3xl md:text-4xl text-gray-300 tracking-wider">PERSONAL TRAINER</h2></div></div></header>
+                <div className="bg-black p-2 flex flex-col sm:flex-row justify-between items-center text-sm gap-2 px-4"><div><span className="font-bold">CLIENTE:</span> <span className="font-normal">{clientName || 'Nome Cliente'}</span></div><div><span className="font-bold">PIANO:</span> <span className="font-normal">{sheetData.name || 'N/A'}</span></div></div>
+                <main className="p-2 sm:p-4 space-y-4">{sheetData.exercises.map((exercise) => (<SingleExerciseBlock key={exercise.id} exercise={exercise} onTrackingChange={(exId, weekIndex, field, value) => onTrackingChange(sheetId, exId, weekIndex, field, value)} />))}</main>
+            </div>
+        );
 
-        const ExerciseForm = ({ onAddOrUpdate, currentExercise, setCurrentExercise, imageLibrary, updateImageLibrary }) => {
+        const ExerciseForm = ({ onAddOrUpdate, currentExercise, setCurrentExercise }) => {
             const [formState, setFormState] = useState(INITIAL_FORM_STATE);
             useEffect(() => {if (currentExercise) setFormState(currentExercise); else setFormState(INITIAL_FORM_STATE);}, [currentExercise]);
-            const handleChange = (e) => {const { name, value } = e.target; const newFormState = { ...formState, [name]: value }; if (name === 'name') {const matchedImage = imageLibrary[value.toLowerCase().trim()]; if (matchedImage) newFormState.imageUrl = matchedImage;}setFormState(newFormState);};
-            const fileToBase64 = (file) => new Promise((resolve, reject) => {const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error);});
-            const handlePaste = async (e) => {const items = e.clipboardData.items; for (const item of items) {if (item.type.indexOf('image') === 0) {e.preventDefault(); const blob = item.getAsFile(); const base64Image = await fileToBase64(blob); setFormState(prevState => ({ ...prevState, imageUrl: base64Image })); break;}}};
-            const handleSubmit = (e) => {e.preventDefault(); onAddOrUpdate({ ...formState }); if (formState.name && formState.imageUrl) {updateImageLibrary(formState.name.toLowerCase().trim(), formState.imageUrl);}setFormState(INITIAL_FORM_STATE);};
-            return (<form onSubmit={handleSubmit} className="space-y-4 p-6 bg-gray-800 rounded-lg"><h3 className="text-2xl font-bold text-white font-teko tracking-wide">{currentExercise ? 'Modifica Esercizio' : 'Aggiungi Esercizio'}</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="md:col-span-2"><label className="block text-sm font-medium text-gray-300">Nome Esercizio</label><input type="text" name="name" value={formState.name} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-blue-500 focus:border-blue-500" required /></div><div><label className="block text-sm font-medium text-gray-300">Categoria</label><select name="category" value={formState.category} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-blue-500 focus:border-blue-500">{EXERCISE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div><div><label className="block text-sm font-medium text-gray-300">URL Immagine</label><input type="text" name="imageUrl" value={formState.imageUrl} onChange={handleChange} onPaste={handlePaste} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Incolla URL o immagine"/></div><div className="md:col-span-2"><label className="block text-sm font-medium text-gray-300">URL Video (Opzionale)</label><input type="text" name="videoUrl" value={formState.videoUrl || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-blue-500 focus:border-blue-500" placeholder="es. https://youtube.com/..."/></div><div className="grid grid-cols-3 gap-2"><div><label className="block text-sm font-medium text-gray-300">Serie</label><input type="text" name="sets" value={formState.sets} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-blue-500 focus:border-blue-500" /></div><div><label className="block text-sm font-medium text-gray-300">Reps</label><input type="text" name="reps" value={formState.reps} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-blue-500 focus:border-blue-500" /></div><div><label className="block text-sm font-medium text-gray-300">Recupero</label><input type="text" name="rest" value={formState.rest} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-blue-500 focus:border-blue-500" /></div></div><div className="md:col-span-2"><label className="block text-sm font-medium text-gray-300">Note Generali</label><textarea name="notes" rows="2" value={formState.notes} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-blue-500 focus:border-blue-500"></textarea></div></div><div className="flex justify-end space-x-3">{currentExercise && (<button type="button" onClick={() => setCurrentExercise(null)} className="py-2 px-4 bg-gray-600 hover:bg-gray-500 text-white font-semibold rounded-lg shadow-md">Annulla</button>)}<button type="submit" className="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md">{currentExercise ? 'Aggiorna' : 'Aggiungi'}</button></div></form>);
+            const handleChange = (e) => {const { name, value } = e.target; setFormState(prev => ({...prev, [name]: value}));};
+            const handleSubmit = (e) => {e.preventDefault(); onAddOrUpdate({ ...formState }); setFormState(INITIAL_FORM_STATE);};
+            return (<form onSubmit={handleSubmit} className="space-y-4 p-6 bg-gray-800 rounded-lg"><h3 className="text-2xl font-bold text-white font-teko tracking-wide">{currentExercise ? 'Modifica Esercizio' : 'Aggiungi Esercizio'}</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="md:col-span-2"><label className="block text-sm font-medium text-gray-300">Nome Esercizio</label><input type="text" name="name" value={formState.name} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required /></div><div><label className="block text-sm font-medium text-gray-300">Categoria</label><select name="category" value={formState.category} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">{EXERCISE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div><div><label className="block text-sm font-medium text-gray-300">URL Immagine</label><input type="text" name="imageUrl" value={formState.imageUrl || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" placeholder="Incolla URL"/></div><div className="md:col-span-2"><label className="block text-sm font-medium text-gray-300">URL Video (Opzionale)</label><input type="text" name="videoUrl" value={formState.videoUrl || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" placeholder="es. https://youtube.com/..."/></div><div className="grid grid-cols-2 gap-x-2"><label className="block text-sm font-medium text-gray-300 col-span-2">Rep Range</label><div><input type="number" name="repRangeMin" value={formState.repRangeMin} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" placeholder="Min"/></div><div><input type="number" name="repRangeMax" value={formState.repRangeMax} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" placeholder="Max"/></div></div><div className="grid grid-cols-2 gap-2"><div><label className="block text-sm font-medium text-gray-300">Serie</label><input type="text" name="sets" value={formState.sets} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" /></div><div><label className="block text-sm font-medium text-gray-300">Recupero</label><input type="text" name="rest" value={formState.rest} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" /></div></div><div className="md:col-span-2"><label className="block text-sm font-medium text-gray-300">Note Generali</label><textarea name="notes" rows="2" value={formState.notes} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white"></textarea></div></div><div className="flex justify-end space-x-3">{currentExercise && (<button type="button" onClick={() => setCurrentExercise(null)} className="py-2 px-4 bg-gray-600 hover:bg-gray-500 text-white font-semibold rounded-lg shadow-md">Annulla</button>)}<button type="submit" className="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md">{currentExercise ? 'Aggiorna' : 'Aggiungi'}</button></div></form>);
         };
         
         const ExerciseList = ({ exercises, onEdit, onDelete }) => (<div className="mt-6 p-6 bg-gray-800 rounded-lg"><h3 className="text-2xl font-bold text-white font-teko tracking-wide mb-4">Elenco Esercizi</h3><ul className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">{exercises.length === 0 && <p className="text-gray-400 text-center py-4">Nessun esercizio aggiunto.</p>}{exercises.map(ex => (<li key={ex.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-lg"><span className="text-white font-medium">{ex.name}</span><div className="space-x-2"><button onClick={() => onEdit(ex.id)} className="text-sm text-blue-400 hover:text-blue-300">Modifica</button><button onClick={() => onDelete(ex.id)} className="text-sm text-red-400 hover:text-red-300">Elimina</button></div></li>))}</ul></div>);
         
         // --- COMPONENTE LOGICO PRINCIPALE ---
         const WorkoutTrackerApp = ({ auth, userId, db }) => {
-            const [appData, setAppData] = useState(INITIAL_APP_STATE);
-            const { clientName, logoUrl, sheets, imageLibrary } = appData;
+            const [appData, setAppData] = useState(null);
             const [activeSheetId, setActiveSheetId] = useState('A');
             const [currentExercise, setCurrentExercise] = useState(null);
-            const [loading, setLoading] = useState(true);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [modalAction, setModalAction] = useState({ action: null, title: '', message: '' });
             const dataSyncRef = useRef(null);
-            
-            // Gestione del caricamento dati da Firestore
+            const [isSaving, setIsSaving] = useState(false);
+            const [isHosted, setIsHosted] = useState(true);
+
+            useEffect(() => { setIsHosted(window.location.protocol !== 'file:'); }, []);
+
+            const saveDataToFirestore = useCallback((data, immediate = false) => {
+                if (!db || !userId || !data) return;
+                const { doc, setDoc } = window.firebase;
+                setIsSaving(true);
+                const saveData = () => {
+                    const docRef = doc(db, 'users', userId);
+                    setDoc(docRef, data, { merge: true })
+                      .then(() => { setTimeout(() => setIsSaving(false), 1000); })
+                      .catch(error => { console.error("Error saving data:", error); setIsSaving(false); });
+                };
+
+                if(dataSyncRef.current) clearTimeout(dataSyncRef.current);
+                if (immediate) {
+                    saveData();
+                } else {
+                    dataSyncRef.current = setTimeout(saveData, 1500);
+                }
+            }, [db, userId]);
+
             useEffect(() => {
                 if (!db || !userId) return;
                 const { doc, onSnapshot } = window.firebase;
                 const docRef = doc(db, 'users', userId);
-                
                 const unsubscribe = onSnapshot(docRef, (docSnap) => {
                     let initialData;
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         const mergedSheets = { ...createInitialSheets(), ...(data.sheets || {})};
                         Object.keys(mergedSheets).forEach(key => { if (!mergedSheets[key].exercises) mergedSheets[key].exercises = []; if(!mergedSheets[key].weeks) mergedSheets[key].weeks = 4; });
-                        initialData = {
-                            clientName: data.clientName || auth.currentUser.email,
-                            logoUrl: data.logoUrl || null,
-                            sheets: mergedSheets,
-                            imageLibrary: data.imageLibrary || {},
-                        };
+                        initialData = { clientName: data.clientName || auth.currentUser.email, logoUrl: data.logoUrl || null, sheets: mergedSheets, imageLibrary: data.imageLibrary || {}, };
                     } else {
                          initialData = {...INITIAL_APP_STATE, clientName: auth.currentUser.email};
-                         saveDataToFirestore(initialData);
+                         saveDataToFirestore(initialData, true); 
                     }
                     setAppData(initialData);
-                    setLoading(false);
-                }, (error) => { console.error("Error listening to document:", error); setLoading(false); });
-
+                }, (error) => { console.error("Error listening to document:", error); });
                 return () => unsubscribe();
-            }, [db, userId, auth]);
+            }, [db, userId, auth, saveDataToFirestore]);
             
-            // Gestione del salvataggio dati su Firestore (con debounce)
-            const saveDataToFirestore = useCallback((data) => {
-                if (!db || !userId) return;
-                const { doc, setDoc } = window.firebase;
-                const docRef = doc(db, 'users', userId);
-                setDoc(docRef, data, { merge: true }).catch(error => { console.error("Error saving data:", error); });
-            }, [db, userId]);
+            const handleSheetNameChange = (e) => {const newName = e.target.value; setAppData(prev => ({ ...prev, sheets: { ...prev.sheets, [activeSheetId]: { ...prev.sheets[activeSheetId], name: newName }}}));};
+            const handleWeeksChange = (e) => { const numWeeks = Math.max(1, Math.min(8, parseInt(e.target.value, 10) || 4)); setAppData(prev => { const updatedSheets = {...prev.sheets}; updatedSheets[activeSheetId].weeks = numWeeks; updatedSheets[activeSheetId].exercises.forEach(ex => { const newTracking = Array.from({length: numWeeks}, (_, i) => ex.tracking?.[i] || {load: '', reps: '', notes: ''}); ex.tracking = newTracking; }); return {...prev, sheets: updatedSheets}; }); };
+            const handleAddOrUpdateExercise = useCallback((exerciseData) => { const numWeeks = appData.sheets[activeSheetId].weeks || 4; setAppData(prev => { const currentExercises = prev.sheets[activeSheetId].exercises; const newExercises = exerciseData.id ? currentExercises.map(ex => { if (ex.id === exerciseData.id) { const updatedEx = {...exerciseData}; const newTracking = Array.from({length: numWeeks}, (_, i) => ex.tracking?.[i] || {load:'',reps:'',notes:''}); updatedEx.tracking = newTracking; return updatedEx; } return ex; }) : [...currentExercises, { ...exerciseData, id: Date.now(), tracking: Array.from({ length: numWeeks }, () => ({ load: '', reps: '', notes: '' })) }]; return { ...prev, sheets: { ...prev.sheets, [activeSheetId]: { ...prev.sheets[activeSheetId], exercises: newExercises }}}; }); setCurrentExercise(null);}, [activeSheetId, appData]);
+            const handleEdit = useCallback((id) => {const exerciseToEdit = appData.sheets[activeSheetId].exercises.find(ex => ex.id === id); setCurrentExercise(exerciseToEdit); window.scrollTo({ top: 0, behavior: 'smooth' });}, [appData]);
+            const handleDelete = useCallback((id) => {setAppData(prev => {const newExercises = prev.sheets[activeSheetId].exercises.filter(ex => ex.id !== id); return { ...prev, sheets: { ...prev.sheets, [activeSheetId]: { ...prev.sheets[activeSheetId], exercises: newExercises }}}; });}, [activeSheetId]);
+            const handleTrackingChange = useCallback((sheetKey, exerciseId, weekIndex, field, value) => {
+                setAppData(prev => {
+                    const newAppData = JSON.parse(JSON.stringify(prev));
+                    const exercise = newAppData.sheets[sheetKey].exercises.find(ex => ex.id === exerciseId);
+                    if (!exercise || !exercise.tracking?.[weekIndex]) return prev;
+                    
+                    exercise.tracking[weekIndex][field] = value;
+                    
+                    if (field === 'reps') {
+                        const repsDone = parseInt(value, 10);
+                        const repsMax = parseInt(exercise.repRangeMax, 10);
+                        const currentLoad = parseFloat(exercise.tracking[weekIndex].load);
 
-            useEffect(() => {
-                if(loading) return;
-                if (dataSyncRef.current) clearTimeout(dataSyncRef.current);
-                dataSyncRef.current = setTimeout(() => {saveDataToFirestore(appData);}, 1500);
-                return () => clearTimeout(dataSyncRef.current);
-            }, [appData, saveDataToFirestore, loading]);
-            
-            // Handlers e funzioni di utilità
-            const setAppDataState = (updater) => {setAppData(currentState => {const newState = typeof updater === 'function' ? updater(currentState) : updater; return newState;});};
-            const handleSheetNameChange = (e) => {const newName = e.target.value; setAppDataState(prev => ({ ...prev, sheets: { ...prev.sheets, [activeSheetId]: { ...prev.sheets[activeSheetId], name: newName }}}));};
-            const handleWeeksChange = (e) => { const numWeeks = Math.max(1, Math.min(8, parseInt(e.target.value, 10) || 4)); setAppDataState(prev => { const updatedSheets = {...prev.sheets}; updatedSheets[activeSheetId].weeks = numWeeks; updatedSheets[activeSheetId].exercises.forEach(ex => { const newTracking = Array.from({length: numWeeks}, (_, i) => ex.tracking?.[i] || {load: '', reps: '', notes: ''}); ex.tracking = newTracking; }); return {...prev, sheets: updatedSheets}; }); };
-            const updateImageLibrary = (name, url) => {setAppDataState(prev => ({ ...prev, imageLibrary: { ...prev.imageLibrary, [name]: url } }));};
-            const handleAddOrUpdateExercise = useCallback((exerciseData) => { const numWeeks = sheets[activeSheetId].weeks || 4; setAppDataState(prev => { const currentExercises = prev.sheets[activeSheetId].exercises; const newExercises = exerciseData.id ? currentExercises.map(ex => { if (ex.id === exerciseData.id) { const updatedEx = {...exerciseData}; const newTracking = Array.from({length: numWeeks}, (_, i) => ex.tracking?.[i] || {load:'',reps:'',notes:''}); updatedEx.tracking = newTracking; return updatedEx; } return ex; }) : [...currentExercises, { ...exerciseData, id: Date.now(), tracking: Array.from({ length: numWeeks }, () => ({ load: '', reps: '', notes: '' })) }]; const newSheets = { ...prev.sheets, [activeSheetId]: { ...prev.sheets[activeSheetId], exercises: newExercises }}; return { ...prev, sheets: newSheets }; }); setCurrentExercise(null);}, [activeSheetId, sheets]);
-            const handleEdit = useCallback((id) => {const exerciseToEdit = appData.sheets[activeSheetId].exercises.find(ex => ex.id === id); setCurrentExercise(exerciseToEdit); window.scrollTo({ top: 0, behavior: 'smooth' });}, [appData.sheets, activeSheetId]);
-            const handleDelete = useCallback((id) => {setAppDataState(prev => {const newExercises = prev.sheets[activeSheetId].exercises.filter(ex => ex.id !== id); const newSheets = { ...prev.sheets, [activeSheetId]: { ...prev.sheets[activeSheetId], exercises: newExercises }}; return { ...prev, sheets: newSheets };});}, [activeSheetId]);
-            const handleTrackingChange = useCallback((sheetKey, exerciseId, weekIndex, field, value) => {setAppDataState(prev => {const newSheets = JSON.parse(JSON.stringify(prev.sheets)); const exercise = newSheets[sheetKey].exercises.find(ex => ex.id === exerciseId); if (exercise && exercise.tracking?.[weekIndex]) {exercise.tracking[weekIndex][field] = value;} return { ...prev, sheets: newSheets };});}, []);
+                        if (!isNaN(repsDone) && !isNaN(repsMax) && !isNaN(currentLoad) && repsDone >= repsMax && weekIndex < exercise.tracking.length - 1) {
+                            const percentageIncrease = currentLoad > 30 ? 1.02 : 1.01;
+                            const nextLoad = Math.ceil(currentLoad * percentageIncrease);
+                            if (exercise.tracking[weekIndex + 1]) {
+                                exercise.tracking[weekIndex + 1].load = nextLoad;
+                            }
+                        }
+                    }
+                    return newAppData;
+                });
+            }, []);
             const handleLogout = () => { window.firebase.signOut(auth); };
 
-            if (loading) { return <LoadingSpinner message="CARICAMENTO DATI..." />; }
+            useEffect(() => { if (appData) saveDataToFirestore(appData); }, [appData, saveDataToFirestore]);
+            
+            if (!appData) { return <LoadingSpinner message="CARICAMENTO DATI..." />; }
 
             return (
                 <>
-                    <ConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={modalAction.action} title={modalAction.title}>{modalAction.message}</ConfirmationModal>
+                    {!isHosted && <div className="hosting-warning text-white text-center p-2 text-xs no-print">ATTENZIONE: L'app è aperta come file locale. Per salvare il login tra le sessioni, caricala online (es. su GitHub Pages).</div>}
                     <div className="min-h-screen bg-gray-900 text-gray-100 p-2 sm:p-4 lg:p-8">
                         <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
                             <div className="lg:col-span-4 no-print">
@@ -242,23 +256,26 @@
                                     <div className="space-y-4 p-4 sm:p-6 bg-gray-800 rounded-lg mb-6">
                                         <div className="flex justify-between items-center"><h2 className="text-3xl font-bold text-white font-teko tracking-wide">Impostazioni</h2><button onClick={handleLogout} className="text-sm py-1 px-3 bg-red-600 hover:bg-red-700 rounded-lg">Logout</button></div>
                                         <p className="text-xs text-gray-400 -mt-2 truncate">Connesso come: {auth.currentUser.email}</p>
-                                        <div className="space-y-2"><label className="block text-sm font-medium text-gray-300">Carica Logo</label><input type="file" onChange={(e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (e) => setAppDataState(p => ({...p, logoUrl: e.target.result})); reader.readAsDataURL(file); } }} accept="image/*" className="mt-1 block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"/></div>
-                                        <div><label className="block text-sm font-medium text-gray-300">Nome Cliente</label><input type="text" value={clientName || ''} onChange={(e) => setAppDataState(prev => ({...prev, clientName: e.target.value}))} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" /></div>
+                                        <div className="space-y-2"><label className="block text-sm font-medium text-gray-300">Carica Logo</label><input type="file" onChange={(e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (e) => setAppData(p => ({...p, logoUrl: e.target.result})); reader.readAsDataURL(file); } }} accept="image/*" className="mt-1 block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"/></div>
+                                        <div><label className="block text-sm font-medium text-gray-300">Nome Cliente</label><input type="text" value={appData.clientName || ''} onChange={(e) => setAppData(prev => ({...prev, clientName: e.target.value}))} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" /></div>
+                                        <button onClick={() => saveDataToFirestore(appData, true)} disabled={isSaving} className="w-full py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md text-sm flex items-center justify-center disabled:bg-gray-500 disabled:cursor-not-allowed">
+                                            {isSaving ? 'Salvataggio...' : 'Salva e Sincronizza'}
+                                        </button>
                                     </div>
-                                    <div className="bg-gray-800 rounded-lg mb-6"><div className="flex border-b border-gray-700">{Object.keys(sheets).map(id => (<button key={id} onClick={() => setActiveSheetId(id)} className={`flex-1 p-3 font-teko text-xl sm:text-2xl tracking-wider ${activeSheetId === id ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>{id}</button>))}</div>
+                                    <div className="bg-gray-800 rounded-lg mb-6"><div className="flex border-b border-gray-700">{Object.keys(appData.sheets).map(id => (<button key={id} onClick={() => setActiveSheetId(id)} className={`flex-1 p-3 font-teko text-xl sm:text-2xl tracking-wider ${activeSheetId === id ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>{id}</button>))}</div>
                                         <div className="p-4 space-y-4">
-                                            <div><label className="block text-sm font-medium text-gray-300">Nome Piano Specifico</label><input type="text" value={sheets[activeSheetId].name || ''} onChange={handleSheetNameChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" /></div>
-                                            <div><label className="block text-sm font-medium text-gray-300">Numero Settimane (1-8)</label><input type="number" min="1" max="8" value={sheets[activeSheetId].weeks || 4} onChange={handleWeeksChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" /></div>
+                                            <div><label className="block text-sm font-medium text-gray-300">Nome Piano Specifico</label><input type="text" value={appData.sheets[activeSheetId].name || ''} onChange={handleSheetNameChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" /></div>
+                                            <div><label className="block text-sm font-medium text-gray-300">Numero Settimane (1-8)</label><input type="number" min="1" max="8" value={appData.sheets[activeSheetId].weeks || 4} onChange={handleWeeksChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" /></div>
                                         </div>
                                     </div>
-                                    <ExerciseForm onAddOrUpdate={handleAddOrUpdateExercise} currentExercise={currentExercise} setCurrentExercise={setCurrentExercise} imageLibrary={imageLibrary} updateImageLibrary={updateImageLibrary} />
-                                    <ExerciseList exercises={sheets[activeSheetId].exercises} onEdit={handleEdit} onDelete={handleDelete} />
+                                    <ExerciseForm onAddOrUpdate={handleAddOrUpdateExercise} currentExercise={currentExercise} setCurrentExercise={setCurrentExercise} />
+                                    <ExerciseList exercises={appData.sheets[activeSheetId].exercises} onEdit={handleEdit} onDelete={handleDelete} />
                                 </div>
                             </div>
                             <div className="lg:col-span-8">
                                 <div id="pdf-preview-area">
-                                    {Object.keys(sheets).filter(id => sheets[id].exercises.length > 0).map(id => (<WorkoutSheet key={id} sheetId={id} clientName={clientName} sheetData={sheets[id]} logoUrl={logoUrl} onTrackingChange={handleTrackingChange} />))}
-                                    {Object.keys(sheets).filter(id => sheets[id].exercises.length > 0).length === 0 && (<div className="text-center p-10 bg-gray-800 rounded-lg"><h3 className="text-2xl font-teko text-gray-400">Nessun esercizio da mostrare</h3><p className="text-gray-500">Aggiungi esercizi dal pannello di sinistra per iniziare.</p></div>)}
+                                    {Object.keys(appData.sheets).filter(id => appData.sheets[id].exercises.length > 0).map(id => (<WorkoutSheet key={id} sheetId={id} clientName={appData.clientName} sheetData={appData.sheets[id]} logoUrl={appData.logoUrl} onTrackingChange={handleTrackingChange} />))}
+                                    {Object.keys(appData.sheets).filter(id => appData.sheets[id].exercises.length > 0).length === 0 && (<div className="text-center p-10 bg-gray-800 rounded-lg"><h3 className="text-2xl font-teko text-gray-400">Nessun esercizio da mostrare</h3><p className="text-gray-500">Aggiungi esercizi dal pannello di sinistra per iniziare.</p></div>)}
                                 </div>
                             </div>
                         </div>
